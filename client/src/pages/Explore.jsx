@@ -1,90 +1,124 @@
+// src/pages/Explore.jsx
 import { useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import SidebarFilters from "../components/SidebarFilters";
 import ResourceCard from "../components/ResourceCard";
+import AO3Filters from "../components/AO3Filters";
 import { useResources } from "../contexts/ResourcesContext";
 
 export default function Explore() {
   const { resources } = useResources();
-  const [activeFilter, setActiveFilter] = useState("Type");
-  const [sort, setSort] = useState("Recents");
-  const [params, setParams] = useSearchParams();
+
+  const [params] = useSearchParams();
   const q = params.get("q") || "";
 
+  // AO3-style filters (live)
+  const [filters, setFilters] = useState({
+    types: [],
+    includeTags: [],
+    excludeTags: [],
+    dateFrom: "",
+    dateTo: "",
+    sort: "Recents",
+  });
+
   const filtered = useMemo(() => {
-  const query = q.trim().toLowerCase();
+    const query = (q || "").trim().toLowerCase();
 
-  const scoreResource = (r) => {
-    if (!query) return 0;
-    let score = 0;
+    // 1) Keyword filter (title/desc/tags)
+    let base = resources;
 
-    const title = (r.title || "").toLowerCase();
-    const desc = (r.description || "").toLowerCase();
-    const tags = (r.tags || []).join(" ").toLowerCase();
+    if (query) {
+      base = base.filter((r) =>
+        ((r.title || "") +
+          " " +
+          (r.description || "") +
+          " " +
+          (r.tags || []).join(" "))
+          .toLowerCase()
+          .includes(query)
+      );
+    }
 
-    if (title.includes(query)) score += 50;
-    if (tags.includes(query)) score += 25;
-    if (desc.includes(query)) score += 10;
+    // 2) Type filter
+    if (filters.types.length) {
+      base = base.filter((r) => filters.types.includes(r.type));
+    }
 
-    // small boost: earlier match in title
-    const idx = title.indexOf(query);
-    if (idx >= 0) score += Math.max(0, 20 - idx / 5);
-
-    return score;
-  };
-
-  let base = resources;
-
-  // if query exists, filter down to matches
-  if (query) {
-    base = resources.filter((r) =>
-      ((r.title || "") + " " + (r.description || "") + " " + (r.tags || []).join(" "))
-        .toLowerCase()
-        .includes(query)
-    );
-  }
-
-  const scored = base.map((r) => ({ r, score: scoreResource(r) }));
-
-  scored.sort((a, b) => {
-    // if query exists, rank by score first
-    if (query && b.score !== a.score) return b.score - a.score;
-
-    // fallback sorting
-    if (sort === "A-Z") return a.r.title.localeCompare(b.r.title);
-        return new Date(b.r.updatedAt) - new Date(a.r.updatedAt);
+    // 3) Include tags (must contain ALL include tags)
+    if (filters.includeTags.length) {
+      base = base.filter((r) => {
+        const tags = r.tags || [];
+        return filters.includeTags.every((t) => tags.includes(t));
       });
+    }
 
-      return scored.map((x) => x.r);
-    }, [q, sort, resources]);
+    // 4) Exclude tags (must contain NONE exclude tags)
+    if (filters.excludeTags.length) {
+      base = base.filter((r) => {
+        const tags = r.tags || [];
+        return filters.excludeTags.every((t) => !tags.includes(t));
+      });
+    }
+
+    // 5) Date range (only works if you have ISO date strings like "2026-01-08")
+    // If your updatedAt is "December 28, 2025" this will not work reliably.
+    if (filters.dateFrom) {
+      base = base.filter((r) => (r.updatedAtISO || "").slice(0, 10) >= filters.dateFrom);
+    }
+    if (filters.dateTo) {
+      base = base.filter((r) => (r.updatedAtISO || "").slice(0, 10) <= filters.dateTo);
+    }
+
+    // 6) Sort
+    const sorted = [...base].sort((a, b) => {
+      if (filters.sort === "A-Z") return (a.title || "").localeCompare(b.title || "");
+      // Recents: assuming newest are already first in your array (upload pushes to front)
+      return 0;
+    });
+
+    return sorted;
+  }, [q, resources, filters]);
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-[260px_1fr] gap-6">
-      <SidebarFilters active={activeFilter} setActive={setActiveFilter} />
+    <div className="grid grid-cols-1 md:grid-cols-[300px_1fr] gap-6">
+      {/* AO3-like sidebar */}
+      <AO3Filters resources={resources} filters={filters} setFilters={setFilters} />
 
       <section className="border border-border/70 bg-surface/30 rounded-2xl p-5">
         <div className="flex flex-col sm:flex-row sm:items-center gap-3 justify-between">
-          <div className="flex items-center gap-2 text-sm text-mutetext">
-            <span className="opacity-80">Filter:</span>
-            <span className="text-text">{activeFilter}</span>
-            {q ? <span className="ml-2">• Searching: “{q}”</span> : null}
+          <div className="text-sm text-mutetext">
+            {q ? (
+              <span>
+                Showing results for <span className="text-text">“{q}”</span>
+              </span>
+            ) : (
+              <span>Browse repositories</span>
+            )}
           </div>
 
-          <div className="flex items-center gap-2">
-            <label className="text-xs text-mutetext">Sort by:</label>
-            <select
-              value={sort}
-              onChange={(e) => setSort(e.target.value)}
-              className="text-sm rounded-lg bg-surface/40 border border-border/70 px-3 py-2 outline-none focus:border-accent/70"
-            >
-              <option>Recents</option>
-              <option>A-Z</option>
-            </select>
+          {/* Optional: keep a small menu button for future */}
+          <button className="w-10 h-10 rounded-lg border border-border/70 bg-surface/40 hover:border-accent/60 transition">
+            …
+          </button>
+        </div>
 
-            <button className="w-10 h-10 rounded-lg border border-border/70 bg-surface/40 hover:border-accent/60 transition">
-              …
-            </button>
-          </div>
+        {/* Active filter summary (AO3 vibe) */}
+        <div className="mt-3 flex flex-wrap gap-2 text-xs text-mutetext">
+          {q ? <Pill label={`Search: ${q}`} /> : null}
+          {filters.types.map((t) => (
+            <Pill key={`type-${t}`} label={`Type: ${t}`} />
+          ))}
+          {filters.includeTags.map((t) => (
+            <Pill key={`in-${t}`} label={`+${t}`} />
+          ))}
+          {filters.excludeTags.map((t) => (
+            <Pill key={`ex-${t}`} label={`-${t}`} />
+          ))}
+          {(filters.dateFrom || filters.dateTo) && (
+            <Pill
+              label={`Date: ${filters.dateFrom || "…"} → ${filters.dateTo || "…"} `}
+            />
+          )}
         </div>
 
         <div className="mt-5 space-y-4">
@@ -92,14 +126,19 @@ export default function Explore() {
             <ResourceCard key={r.id} r={r} query={q} />
           ))}
 
-
           {filtered.length === 0 && (
-            <div className="text-center text-mutetext py-12">
-              No results found.
-            </div>
+            <div className="text-center text-mutetext py-12">No results found.</div>
           )}
         </div>
       </section>
     </div>
+  );
+}
+
+function Pill({ label }) {
+  return (
+    <span className="px-2 py-1 rounded-full border border-border/60 bg-surface/30">
+      {label}
+    </span>
   );
 }
