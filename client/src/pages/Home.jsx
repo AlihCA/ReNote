@@ -1,6 +1,5 @@
 import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
-import heroBg from "../assets/hero-bg.png";
 
 export default function Home() {
   const [scrollOpacity, setScrollOpacity] = useState(1);
@@ -28,7 +27,7 @@ export default function Home() {
         <div
           className="absolute inset-0 bg-cover bg-center"
           style={{
-            backgroundImage: `url(${heroBg})`,
+            backgroundImage: "url('/hero-bg.png')",
           }}
         />
 
