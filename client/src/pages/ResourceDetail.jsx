@@ -1,10 +1,26 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
-import { mockResources } from "../data/mockResources";
-
+import { useResources } from "../contexts/ResourcesContext";
+import { useCollections } from "../contexts/CollectionsContext";
+import { Check } from "lucide-react";
+  
 export default function ResourceDetail() {
+  const [open, setOpen] = useState(false);
+  const menuRef = useRef(null);
+
+  useEffect(() => {
+  function onDocClick(e) {
+    if (!menuRef.current) return;
+      if (!menuRef.current.contains(e.target)) setOpen(false);
+      }
+      if (open) document.addEventListener("mousedown", onDocClick);
+      return () => document.removeEventListener("mousedown", onDocClick);
+    }, [open]);
+  
+  const { collections, toggleResource } = useCollections();
+  const { resources } = useResources();
   const { id } = useParams();
-  const r = useMemo(() => mockResources.find((x) => x.id === id), [id]);
+  const r = useMemo(() => resources.find((x) => x.id === id), [resources, id]);
 
   const [summary, setSummary] = useState(
     "This is an AI-generated summary placeholder. In the full version, ReNote will extract key points, objectives, and conclusions from the document."
@@ -42,9 +58,41 @@ export default function ResourceDetail() {
         </div>
 
         <div className="flex gap-2">
-          <button className="px-3 py-2 rounded-lg text-sm border border-accent/35 bg-accent/10 hover:bg-accent/20 transition">
-            Save to Collection
-          </button>
+          <div className="relative" ref={menuRef}>
+            <button
+              onClick={() => setOpen((o) => !o)}
+              className="px-3 py-2 rounded-lg text-sm border border-accent/35 bg-accent/10 hover:bg-accent/20 transition"
+            >
+              Save to Collection
+            </button>
+
+            {open && (
+              <div className="absolute right-0 mt-2 w-48 rounded-lg border border-border/70 bg-surface/95 backdrop-blur shadow-lg z-20">
+                {collections.length === 0 && (
+                  <div className="px-3 py-2 text-sm text-mutetext">
+                    No collections yet
+                  </div>
+                )}
+
+                {collections.map((c) => {
+                  const saved = c.resourceIds.includes(r.id);
+                  return (
+                    <button
+                      key={c.id}
+                      onClick={() => toggleResource(c.id, r.id)}
+                      className="w-full text-left px-3 py-2 text-sm hover:bg-accent/10 flex items-center gap-2"
+                    >
+                      <span className="w-4">
+                        {saved ? <Check size={16} className="text-accent" /> : null}
+                      </span>
+                      <span className="flex-1">{c.name}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
           <button className="px-3 py-2 rounded-lg text-sm border border-border/70 bg-surface/40 hover:border-accent/60 transition">
             Delete
           </button>

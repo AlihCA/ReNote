@@ -8,6 +8,7 @@ export const mockResources = [
     updatedAt: "2025-12-28",
     stars: 12,
     category: "Main Category",
+  
   },
   {
     id: "2",
@@ -18,6 +19,7 @@ export const mockResources = [
     updatedAt: "2025-12-10",
     stars: 8,
     category: "Main Category",
+
   },
   {
     id: "3",
@@ -28,5 +30,6 @@ export const mockResources = [
     updatedAt: "2025-11-30",
     stars: 21,
     category: "Main Category",
+
   },
 ];

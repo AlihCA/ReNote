@@ -90,7 +90,7 @@ export default function Home() {
                   to="/explore"
                   className="px-6 py-3 rounded-xl border border-white/15 text-white bg-white/5 hover:bg-white/10
                             hover:border-accent/70 text-mutetext hover:text-text
-                            transition-all duration-00 ease-out [cubic-bezier(0.4,0,0.2,1)]"
+                            transition-all duration-200 ease-out [cubic-bezier(0.4,0,0.2,1)]"
                 
                 >
                   Explore Repositories

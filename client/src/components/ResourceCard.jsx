@@ -1,6 +1,32 @@
 import { Link } from "react-router-dom";
+import { useResources } from "../contexts/ResourcesContext";
+import { useUser } from "@clerk/clerk-react";
+import { splitHighlight } from "../utils/highlight";
 
-export default function ResourceCard({ r }) {
+function Highlight({ text, query }) {
+  const parts = splitHighlight(text, query);
+  return (
+    <>
+      {parts.map((p, i) =>
+        p.match ? (
+          <mark key={i} className="bg-accent/20 text-text rounded px-1 py-0.5">
+            {p.text}
+          </mark>
+        ) : (
+          <span key={i}>{p.text}</span>
+        )
+      )}
+    </>
+  );
+}
+
+export default function ResourceCard({ r, query = "" }) {
+  const { toggleStar } = useResources();
+  const { user } = useUser();
+
+  const starredBy = Array.isArray(r.starredBy) ? r.starredBy : [];
+  const isStarred = user ? starredBy.includes(user.id) : false;
+
   return (
     <div className="border border-border/70 bg-surface/40 rounded-2xl p-5 hover:border-accent/60 transition">
       <div className="flex items-start gap-4">
@@ -11,19 +37,22 @@ export default function ResourceCard({ r }) {
             to={`/resource/${r.id}`}
             className="font-semibold leading-snug hover:text-accent transition"
           >
-            {r.title}
+            <div className="font-medium">
+              <Highlight text={r.title} query={query} />
+            </div>
           </Link>
+
           <p className="text-sm text-mutetext mt-2">
-            Description: {r.description}
+            <Highlight text={r.description} query={query} />
           </p>
 
           <div className="flex flex-wrap gap-2 mt-3">
-            {r.tags.map((t) => (
+            {(r.tags || []).map((t) => (
               <span
                 key={t}
                 className="text-xs px-2.5 py-1 rounded-full border border-accent/25 bg-accent/10 text-text"
               >
-                {t}
+                <Highlight text={t} query={query} />
               </span>
             ))}
           </div>
@@ -36,8 +65,11 @@ export default function ResourceCard({ r }) {
           </div>
         </div>
 
-        <button className="px-3 py-2 rounded-lg text-sm border border-accent/35 bg-accent/10 hover:bg-accent/20 transition">
-          ✧ Star
+        <button
+          onClick={() => toggleStar(r.id)}
+          className="px-3 py-2 rounded-lg text-sm border border-accent/35 bg-accent/10 hover:bg-accent/20 transition"
+        >
+          {isStarred ? "✦ Star" : "✧ Star"}
         </button>
       </div>
     </div>

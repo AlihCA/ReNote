@@ -1,6 +1,7 @@
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { Search } from "lucide-react";
+import { SignedIn, SignedOut, UserButton } from "@clerk/clerk-react";
 
 const navLinkClass = ({ isActive }) =>
   `px-3 py-2 text-sm rounded-md transition ${
@@ -50,24 +51,38 @@ export default function Navbar() {
         </form>
 
         <div className="flex items-center gap-2">
-          <Link
-            to="/dashboard"
-            className="px-4 py-2 text-sm rounded-lg border border-border/70 hover:border-accent/70 text-mutetext hover:text-text
-            transition-all duration-00 ease-out [cubic-bezier(0.4,0,0.2,1)]"
-          >
-            Sign in
-          </Link>
-          <Link
-            to="/dashboard"
-            className="px-4 py-2 text-sm rounded-lg font-medium text-bg0
-                      bg-gradient-to-r from-accent to-accent2
-                      hover:bg-border hover:from-transparent hover:to-transparent
-                      hover:text-accent
-                      transition-all duration-500 ease-out [cubic-bezier(0.4,0,0.2,1)]"
-          >
-            Sign-up
-          </Link>
+          <SignedOut>
+            <Link
+              to="/sign-in"
+              className="px-4 py-2 text-sm rounded-lg border border-border/70 hover:border-accent/70 text-mutetext hover:text-text
+              transition-all duration-200 ease-out [cubic-bezier(0.4,0,0.2,1)]"
+            >
+              Sign in
+            </Link>
+
+            <Link
+              to="/sign-up"
+              className="px-4 py-2 text-sm rounded-lg font-medium text-bg0
+                        bg-gradient-to-r from-accent to-accent2
+                        hover:bg-border hover:from-transparent hover:to-transparent
+                        hover:text-accent
+                        transition-all duration-500 ease-out [cubic-bezier(0.4,0,0.2,1)]"
+            >
+              Sign-up
+            </Link>
+          </SignedOut>
+
+          <SignedIn>
+            <Link
+              to="/dashboard"
+              className="px-4 py-2 text-sm rounded-lg border border-border/70 hover:border-accent/70 text-mutetext hover:text-text transition"
+            >
+              Dashboard
+            </Link>
+            <UserButton afterSignOutUrl="/" />
+          </SignedIn>
         </div>
+
       </div>
     </header>
   );
