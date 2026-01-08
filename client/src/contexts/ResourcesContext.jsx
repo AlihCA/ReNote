@@ -8,6 +8,9 @@ export function ResourcesProvider({ children }) {
   const { user, isLoaded } = useUser();
   const [resources, setResources] = useState(mockResources);
 
+  function deleteResource(id) {
+    setResources((prev) => prev.filter((r) => r.id !== id));
+  }
   // Load resources when auth state is known
   useEffect(() => {
     if (!isLoaded) return;
@@ -55,7 +58,9 @@ export function ResourcesProvider({ children }) {
   }
 
   return (
-    <ResourcesContext.Provider value={{ resources, addResource, toggleStar }}>
+    <ResourcesContext.Provider
+      value={{ resources, addResource, deleteResource, toggleStar }}
+    >
       {children}
     </ResourcesContext.Provider>
   );

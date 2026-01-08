@@ -3,22 +3,24 @@ import { useParams, Link } from "react-router-dom";
 import { useResources } from "../contexts/ResourcesContext";
 import { useCollections } from "../contexts/CollectionsContext";
 import { Check } from "lucide-react";
-  
+import { useNavigate } from "react-router-dom";
+
 export default function ResourceDetail() {
   const [open, setOpen] = useState(false);
   const menuRef = useRef(null);
 
   useEffect(() => {
-  function onDocClick(e) {
-    if (!menuRef.current) return;
+    function onDocClick(e) {
+      if (!menuRef.current) return;
       if (!menuRef.current.contains(e.target)) setOpen(false);
-      }
-      if (open) document.addEventListener("mousedown", onDocClick);
-      return () => document.removeEventListener("mousedown", onDocClick);
-    }, [open]);
-  
+    }
+    if (open) document.addEventListener("mousedown", onDocClick);
+    return () => document.removeEventListener("mousedown", onDocClick);
+  }, [open]);
+
   const { collections, toggleResource } = useCollections();
-  const { resources } = useResources();
+  const { deleteResource, resources } = useResources();
+  const navigate = useNavigate();
   const { id } = useParams();
   const r = useMemo(() => resources.find((x) => x.id === id), [resources, id]);
 
@@ -30,7 +32,10 @@ export default function ResourceDetail() {
   if (!r) {
     return (
       <div className="text-mutetext">
-        Resource not found. <Link className="text-accent" to="/explore">Back</Link>
+        Resource not found.{" "}
+        <Link className="text-accent" to="/explore">
+          Back
+        </Link>
       </div>
     );
   }
@@ -65,6 +70,17 @@ export default function ResourceDetail() {
             >
               Save to Collection
             </button>
+            <button
+              onClick={() => {
+                if (confirm("Are you sure you want to delete this resource?")) {
+                  deleteResource(r.id);
+                  navigate("/explore");
+                }
+              }}
+              className="px-3 py-2 rounded-lg text-sm border border-border/70 bg surface/40 hover:border-red-400 hover:text-red-400 transition"
+            >
+              Delete
+            </button>
 
             {open && (
               <div className="absolute right-0 mt-2 w-48 rounded-lg border border-border/70 bg-surface/95 backdrop-blur shadow-lg z-20">
@@ -83,7 +99,9 @@ export default function ResourceDetail() {
                       className="w-full text-left px-3 py-2 text-sm hover:bg-accent/10 flex items-center gap-2"
                     >
                       <span className="w-4">
-                        {saved ? <Check size={16} className="text-accent" /> : null}
+                        {saved ? (
+                          <Check size={16} className="text-accent" />
+                        ) : null}
                       </span>
                       <span className="flex-1">{c.name}</span>
                     </button>
@@ -92,7 +110,6 @@ export default function ResourceDetail() {
               </div>
             )}
           </div>
-
         </div>
       </div>
 
@@ -115,9 +132,7 @@ export default function ResourceDetail() {
             </button>
           </div>
 
-          <p className="mt-3 text-sm text-text/90 leading-relaxed">
-            {summary}
-          </p>
+          <p className="mt-3 text-sm text-text/90 leading-relaxed">{summary}</p>
         </div>
       </div>
     </div>
