@@ -25,7 +25,7 @@ export default function Dashboard() {
       {/* Header */}
       <section className="border border-border/70 bg-surface/30 rounded-2xl p-6">
         <h1 className="text-2xl font-semibold">
-          Welcome back 👋
+          Welcome back! ♡
         </h1>
         <p className="text-mutetext mt-1">
           Here’s a snapshot of your ReNote workspace.

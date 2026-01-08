@@ -93,9 +93,6 @@ export default function ResourceDetail() {
             )}
           </div>
 
-          <button className="px-3 py-2 rounded-lg text-sm border border-border/70 bg-surface/40 hover:border-accent/60 transition">
-            Delete
-          </button>
         </div>
       </div>
 
