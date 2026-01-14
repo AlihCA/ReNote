@@ -60,7 +60,7 @@ This project focuses on **user experience, interface design, and system flow**, 
 
 ---
 
-## Getting Started (Setup Instructions)
+## Setup Instructions
 
 ### 1️⃣ Clone the repository
 ```bash
